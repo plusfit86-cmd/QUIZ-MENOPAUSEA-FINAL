@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocolo Pilates Menopausia - Quiz</title>
+    <style>
+        /* --- 1. SISTEMA DE DISEÑO UNIFICADO --- */
+        :root {
+            --bg-beige: #F5F2F0;    /* Fondo S1 */
+            --bg-neutral: #F8F8F8;  /* Fondo S2-S3 */
+            --bg-grey: #F0F0F0;     /* Fondo Quiz General */
+            --accent: #FF8C00;      /* Naranja Vibrante */
+            --accent-hover: #E67E00;
+            --text-main: #333333;
+            --text-sec: #666666;
+            --text-muted: #999999;
+            --white: #FFFFFF;
+            --success: #4CAF50;
+            --error: #FF4444;
+            --gold: #D4AF37;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-beige); color: var(--text-main); line-height: 1.5; overflow-x: hidden; }
+
+        .quiz-wrapper { max-width: 600px; margin: 0 auto; min-height: 100vh; background-color: var(--white); position: relative; display: flex; flex-direction: column; }
+        
+        /* Navegación */
+        .screen { display: none; width: 100%; padding: 25px 24px 60px; flex-direction: column; animation: fadeIn 0.3s ease-in-out; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Barra de Progreso Superior */
+        .progress-container { width: 100%; height: 6px; background: #E0E0E0; position: sticky; top: 0; z-index: 1000; }
+        #progress-fill { height: 100%; width: 5%; background: var(--accent); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Tipografía */
+        h1 { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 20px; text-transform: uppercase; line-height: 1.2; color: var(--text-main); }
+        h2 { font-size: 19px; font-weight: 700; text-align: center; margin-bottom: 15px; }
+        .instruction { font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 25px; }
+
+        /* Botones y Opciones */
+        .cta-main { background: var(--accent); color: white; border: none; border-radius: 30px; padding: 18px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(255,140,0,0.3); margin-top: 15px; width: 100%; transition: 0.2s; display: block; }
+        .cta-main:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+
+        .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .opt-card { background: var(--white); border: 2px solid transparent; border-radius: 12px; padding: 18px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+        .opt-card:hover { border-color: var(--accent); }
+        .opt-card.selected { border-color: var(--accent); background: #FFF9F2; }
+
+        /* Checkbox y Radio Visuals */
+        .custom-check { width: 18px; height: 18px; border: 2px solid #CCC; border-radius: 4px; margin-right: 12px; flex-shrink: 0; position: relative; transition: 0.2s; }
+        .selected .custom-check { background: var(--accent); border-color: var(--accent); }
+        .selected .custom-check::after { content: "✓"; color: white; font-size: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        .pill-btn { background: var(--white); border: 1px solid #DDD; border-radius: 25px; padding: 15px 20px; margin-bottom: 12px; cursor: pointer; font-weight: 600; display: flex; align-items: center; width: 100%; transition: 0.2s; font-size: 15px; }
+        .pill-btn.selected { background-color: var(--accent); color: white; border-color: var(--accent); }
+
+        /* --- ELEMENTOS ESPECIALES (S12, S14, S19) --- */
+        .bar-metabolism { width: 100%; height: 12px; background: linear-gradient(to right, #3B82F6, #FDE047, #FF8C00); border-radius: 10px; position: relative; margin: 35px 0 15px; }
+        .marker-you { position: absolute; top: -32px; background: var(--success); color: white; padding: 4px 10px; border-radius: 10px; font-size: 10px; transform: translateX(-50%); white-space: nowrap; font-weight: 800; }
+        .marker-you::after { content: ""; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid var(--success); }
+
+        .gauge-wrapper { position: relative; width: 200px; height: 100px; margin: 20px auto; overflow: hidden; }
+        .gauge-svg { width: 200px; height: 100px; }
+        .gauge-needle { position: absolute; bottom: 0; left: 50%; width: 4px; height: 75px; background: #333; transform-origin: bottom center; transform: translateX(-50%) rotate(-55deg); border-radius: 4px; }
+
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 8px; background: #DDD; border-radius: 10px; outline: none; margin: 25px 0; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; background: var(--accent); border: 4px solid white; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+
+        .height-triangle { position: absolute; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid var(--accent); top: -20px; transform: translateX(-50%); transition: left 0.1s; }
+
+        /* --- CARGAS Y ANIMACIONES --- */
+        .spinner { width: 40px; height: 40px; border: 4px solid #EEE; border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+        /* --- PANTALLA 26: SALES PAGE --- */
+        .sales-header { background: var(--accent); color: white; padding: 25px 20px; text-align: center; }
+        .video-box { background: #F0F0F0; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        .iphone-frame { width: 280px; height: 490px; background: #000; border: 10px solid #333; border-radius: 40px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; }
+        .sales-section { padding: 40px 20px; border-bottom: 1px solid #EEE; text-align: center; background: white; }
+        .price-card { background: #FFF9F2; border: 2px dashed var(--accent); border-radius: 20px; padding: 30px 20px; margin: 20px 0; }
+        .old-price { text-decoration: line-through; color: var(--error); font-weight: 700; font-size: 18px; }
+        .new-price { font-size: 56px; font-weight: 900; color: #000; display: block; line-height: 1; margin: 10px 0; }
+        .strike-red { text-decoration: line-through; color: var(--error); }
+    </style>
+</head>
+<body>
+
+<div class="quiz-wrapper">
+    <div class="progress-container"><div id="progress-fill"></div></div>
+
+    <!-- P1: INTRODUCCIÓN -->
+    <div class="screen active" id="s1" style="background: var(--bg-beige);">
+        <h1>ELIMINA 1KG POR SEMANA Y TONIFICA LOS MÚSCULOS EN LA MENOPAUSIA</h1>
+        <div style="background: var(--accent); color:white; padding: 12px; border-radius: 5px; font-weight: 700; text-align: center; margin-bottom: 25px;">CON SOLO 10 MINUTOS AL DÍA DE PILATES EN CASA</div>
+        <img src="https://i.imgur.com/GGEs4l3.png" style="width:100%; border-radius: 12px; margin-bottom: 25px;">
+        <h2 style="font-size: 18px;">Desafío específico para tu edad y objetivo:</h2>
+        <div class="opt-grid">
+            <button class="cta-main" style="margin:0" onclick="next(2)">30-40 años</button>
+            <button class="cta-main" style="margin:0" onclick="next(2)">41-50 años</button>
+            <button class="cta-main" style="margin:0" onclick="next(2)">51-60 años</button>
+            <button class="cta-main" style="margin:0" onclick="next(2)">61-70 años</button>
+        </div>
+    </div>
+
+    <!-- P2: CLASIFICACIÓN -->
+    <div class="screen" id="s2" style="background: var(--bg-neutral);">
+        <h1>¿Cómo clasificas tu cuerpo hoy?</h1>
+        <div class="opt-grid">
+            <div class="opt-card" onclick="next(3)"><img src="https://i.imgur.com/8z4rS57.png" style="width:90px; margin-bottom:10px;">Muy encima del peso</div>
+            <div class="opt-card" onclick="next(3)"><img src="https://i.imgur.com/JI1Vt2X.png" style="width:90px; margin-bottom:10px;">Un poco encima</div>
+            <div class="opt-card" onclick="next(3)"><img src="https://i.imgur.com/wvshXxZ.png" style="width:90px; margin-bottom:10px;">Falsa delgada</div>
+            <div class="opt-card" onclick="next(3)"><img src="https://i.imgur.com/amepPVc.png" style="width:90px; margin-bottom:10px;">Delgada</div>
+        </div>
+    </div>
+
+    <!-- P3: METABOLISMO -->
+    <div class="screen" id="s3" style="background: var(--bg-neutral);">
+        <h1>¿Cómo es tu metabolismo?</h1>
+        <div class="opt-card" style="flex-direction:row; gap:20px; text-align:left; padding:20px; margin-bottom:20px;" onclick="next(4)">
+            <span style="font-size:35px;">🐢</span><div><strong>Lento</strong><br><small>Difícil de perder y fácil de ganar peso</small></div>
+        </div>
+        <div class="opt-card" style="flex-direction:row; gap:20px; text-align:left; padding:20px;" onclick="next(4)">
+            <span style="font-size:35px;">🔥</span><div><strong>Acelerado</strong><br><small>Fácil de perder y difícil de ganar peso</small></div>
+        </div>
+    </div>
+
+    <!-- P4: META PESO -->
+    <div class="screen" id="s4" style="background: var(--bg-grey);">
+        <h1>¿Cuántos kilos te gustaría eliminar?</h1>
+        <div class="pill-btn" onclick="next(5)">○ 0-5kg</div>
+        <div class="pill-btn" onclick="next(5)">○ 6-10kg</div>
+        <div class="pill-btn" onclick="next(5)">○ 11-15kg</div>
+        <div class="pill-btn" onclick="next(5)">○ 16-20kg</div>
+        <div class="pill-btn" onclick="next(5)">○ Más de 21kg</div>
+    </div>
+
+    <!-- P5: PRUEBA SOCIAL 1 -->
+    <div class="screen" id="s5" style="background: var(--bg-grey);">
+        <h1>Su meta es súper posible de alcanzar</h1>
+        <p style="color:var(--accent); font-weight:800; text-align:center; margin-bottom:15px;">Mira este ejemplo real:</p>
+        <img src="https://i.imgur.com/0ShlVnO.png" style="width:100%; aspect-ratio:2/1; object-fit:cover; border-radius:12px; margin-bottom:20px;">
+        <div class="opt-card" style="align-items:flex-start; text-align:left; padding:20px;">
+            <div style="display:flex; align-items:center; margin-bottom:10px;">
+                <img src="https://i.imgur.com/WYIv8kn.png" style="width:45px; height:45px; border-radius:50%; margin-right:12px; border:2px solid var(--accent);">
+                <div><strong>Vivan Almeida</strong><br><span style="color:var(--gold);">★★★★★</span></div>
+            </div>
+            <p style="font-size:14px;">"En 2 meses perdí 5kg con pilates en casa y recuperé mi barriga de los 25 años."</p>
+        </div>
+        <button class="cta-main" onclick="next(6)">CONTINUAR TEST GRATUITO</button>
+        <p style="color:var(--error); font-size:13px; font-weight:700; text-align:center; margin-top:15px;">En la próxima etapa descubre qué está trabando sus resultados</p>
+    </div>
+
+    <!-- P6: OBJETIVOS EXTRAS (TODAS LAS OPCIONES) -->
+    <div class="screen" id="s6">
+        <h1>¿Cuáles son tus otros objetivos?</h1>
+        <p class="instruction">Puedes marcar varios:</p>
+        <div class="pill-btn" onclick="toggleMulti(this)"><div class="custom-check"></div> Perder barriga / Grasa localizada</div>
+        <div class="pill-btn" onclick="toggleMulti(this)"><div class="custom-check"></div> Mejorar flacidez</div>
+        <div class="pill-btn" onclick="toggleMulti(this)"><div class="custom-check"></div> Mejorar dolores</div>
+        <div class="pill-btn" onclick="toggleMulti(this)"><div class="custom-check"></div> Más disposición y energía</div>
+        <div class="pill-btn" onclick="toggleMulti(this)"><div class="custom-check"></div> Mejorar la salud</div>
+        <button class="cta-main" onclick="next(7)">CONTINUAR</button>
+    </div>
+
+    <!-- P7: CUERPO OBJETIVO -->
+    <div class="screen" id="s7">
+        <h1>¿Cuál cuerpo te gustaría tener?</h1>
+        <div class="opt-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="opt-card" onclick="next(8)"><img src="https://i.imgur.com/lnn3yby.jpeg" style="width:100%; height:160px; object-fit:cover; border-radius:8px;">Bien magra</div>
+            <div class="opt-card" onclick="next(8)"><img src="https://i.imgur.com/lCFLHKq.jpeg" style="width:100%; height:160px; object-fit:cover; border-radius:8px;">Un poco más</div>
+            <div class="opt-card" onclick="next(8)"><img src="https://i.imgur.com/ZMaE0Si.jpeg" style="width:100%; height:160px; object-fit:cover; border-radius:8px;">Definida</div>
+        </div>
+    </div>
+
+    <!-- P8: IMPACTO EMOCIONAL -->
+    <div class="screen" id="s8">
+        <h1>¿Cómo tu peso ha impactado tu vida?</h1>
+        <p class="instruction">Puede elegir varias:</p>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Autoestima baja 😔 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Poca disposición 😤 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Problemas de salud 🤕 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Me siento invisible 💡 <div class="custom-check"></div></div>
+        <button class="cta-main" onclick="next(10)">CONTINUAR</button>
+    </div>
+
+    <!-- P10: GRASA ABDOMINAL -->
+    <div class="screen" id="s10">
+        <h1>¿Acumulas grasa en la barriga con facilidad?</h1>
+        <p class="instruction">La famosa barriga de menopausia</p>
+        <div class="opt-card" style="padding:25px; margin-bottom:20px;" onclick="startLoading(11)">Sí, es el principal lugar 😤</div>
+        <div class="opt-card" style="padding:25px;" onclick="startLoading(11)">Acumulo más en otros lugares 😞</div>
+    </div>
+
+    <!-- P11: CARGA 1 (7 seg) -->
+    <div class="screen" id="s11" style="justify-content:center; text-align:center;">
+        <div class="spinner"></div>
+        <h2>Analizando tus respuestas... <span id="p11">51%</span></h2>
+        <div style="width:100%; height:8px; background:#EEE; border-radius:10px; overflow:hidden; margin:25px 0;">
+            <div id="b11" style="height:100%; width:51%; background:var(--accent); transition:width 7s linear;"></div>
+        </div>
+        <p style="color:var(--error); font-weight:700; animation:pulse 2s infinite;">Identificando la causa raíz del problema...</p>
+    </div>
+
+    <!-- P12: DIAGNÓSTICO PERSONALIZADO -->
+    <div class="screen" id="s12">
+        <div style="background:#FFE4E6; color:#E11D48; padding:20px; border-radius:10px; font-weight:900; text-align:center; margin-bottom:25px;">⚠️ CAUSA RAÍZ IDENTIFICADA: BAJA HORMONAL</div>
+        <h2>VE TU ESTADO ACTUAL:</h2>
+        
+        <div class="opt-card" style="align-items:flex-start; text-align:left; padding:20px; margin-bottom:20px;">
+            <p>1- Metabolismo trabajando al <strong>27%</strong>:</p>
+            <div class="bar-metabolism">
+                <div class="marker-you" style="left:27%;">Tú estás aquí</div>
+                <div class="marker-dot" style="left:27%; position:absolute; width:15px; height:15px; background:white; border:3px solid var(--success); border-radius:50%; top:50%; transform:translate(-50%,-50%);"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; width:100%; font-size:11px; color:#999;"><span>Lento</span><span>Acelerado</span></div>
+        </div>
+
+        <div class="opt-card" style="padding:20px;">
+            <p style="text-align:left; width:100%;">2- Hormonas bajas al <strong>32%</strong>:</p>
+            <div class="gauge-wrapper">
+                <svg class="gauge-svg" viewBox="0 0 200 100">
+                    <defs>
+                        <linearGradient id="g-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#EF4444" /><stop offset="50%" stop-color="#FDE047" /><stop offset="100%" stop-color="#22C55E" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#EEE" stroke-width="20" stroke-linecap="round" />
+                    <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="url(#g-grad)" stroke-width="20" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="170" />
+                </svg>
+                <div class="gauge-needle"></div>
+                <div style="position:absolute; top:15px; left:30%; background:var(--success); color:white; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:800;">Tú</div>
+            </div>
+        </div>
+        <button class="cta-main" onclick="next(13)">CONTINUAR PARA SOLUCIÓN</button>
+    </div>
+
+    <!-- P13: RUTINA -->
+    <div class="screen" id="s13">
+        <h1>¿Cómo es tu día a día?</h1>
+        <div class="pill-btn" onclick="next(14)">Trabajo fuera / Rutina corrida 🚗</div>
+        <div class="pill-btn" onclick="next(14)">Trabajo en casa / Flexible 🏠</div>
+        <div class="pill-btn" onclick="next(14)">Actualmente no trabajo 😊</div>
+    </div>
+
+    <!-- P14: PESO SLIDER -->
+    <div class="screen" id="s14">
+        <h1>¿Cuál es tu peso actual?</h1>
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+            <button class="pill-btn selected" style="width:70px; height:35px; justify-content:center;" onclick="setUnit('kg')">kg</button>
+            <button class="pill-btn" style="width:70px; height:35px; justify-content:center;" onclick="setUnit('lb')">lb</button>
+        </div>
+        <h1 id="weight-display" style="font-size:48px; color:var(--accent);">70kg</h1>
+        <input type="range" id="weight-slider" min="40" max="150" value="70" oninput="updateWeight(this.value)">
+        <button class="cta-main" onclick="next(15)">CONTINUAR PRUEBA GRATUITA</button>
+    </div>
+
+    <!-- P15: FRECUENCIA -->
+    <div class="screen" id="s15">
+        <h1>¿Frecuencia de ejercicio?</h1>
+        <div class="pill-btn" onclick="next(16)">1-2x por semana</div>
+        <div class="pill-btn" onclick="next(16)">3-4x por semana</div>
+        <div class="pill-btn" onclick="next(16)">5x o más por semana</div>
+    </div>
+
+    <!-- P16: SÍNTOMAS MENOPAUSIA -->
+    <div class="screen" id="s16">
+        <h1>¿Qué síntomas sientes?</h1>
+        <p class="instruction">Puede elegir varias:</p>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Calores 🔥 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Cansancio y falta de energía 😴 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Dolores en el cuerpo 🤕 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Irritabilidad 😤 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Ansiedad 😰 <div class="custom-check"></div></div>
+        <button class="cta-main" onclick="startLoading(17)">CONTINUAR</button>
+    </div>
+
+    <!-- P17: CARGA 2 (5 seg) -->
+    <div class="screen" id="s17" style="justify-content:center; text-align:center;">
+        <div class="spinner"></div>
+        <h2>Analizando... <span id="p17">0%</span></h2>
+        <div style="width:100%; height:8px; background:#EEE; border-radius:10px; overflow:hidden; margin:20px 0;">
+            <div id="b17" style="height:100%; width:0%; background:var(--accent); transition:width 5s linear;"></div>
+        </div>
+        <p style="color:var(--error); font-weight:700;">Identificando la solución para tu caso...</p>
+    </div>
+
+    <!-- P18: ESTIMATIVA RESULTADO -->
+    <div class="screen" id="s18">
+        <div style="background:var(--success); color:white; padding:12px; border-radius:30px; font-size:11px; font-weight:800; align-self:center; margin-bottom:20px;">POTENCIAL IDENTIFICADO</div>
+        <h1 style="font-size:18px;">Puedes <span style="color:var(--error); text-decoration:underline;">eliminar 1kg por semana</span> activando tu reposición hormonal.</h1>
+        <div class="opt-card" style="width:100%; padding:30px 20px; margin-bottom:25px;">
+            <p class="instruction" style="margin-bottom:40px; font-weight:700;">TU ESTIMATIVA DE ADELGAZAMIENTO</p>
+            <div style="width:100%; height:12px; background:#EEE; border-radius:10px; position:relative;">
+                <div style="width:50%; height:100%; background:linear-gradient(90deg, #FFC107, var(--accent)); border-radius:10px 0 0 10px;"></div>
+                <div style="position:absolute; left:50%; top:-40px; transform:translateX(-50%);"><div style="background:#000; color:white; padding:4px 10px; border-radius:5px; font-size:10px; font-weight:800;">Tú estás aquí</div></div>
+                <div style="position:absolute; width:18px; height:18px; background:white; border:4px solid var(--accent); border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%);"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; width:100%; font-size:10px; margin-top:15px; font-weight:700; color:#999;"><span>0.5kg/sem</span><span>1kg/sem</span><span>1.5kg/sem</span></div>
+        </div>
+        <img src="https://i.imgur.com/1ttrpIv.jpeg" style="width:100%; border-radius:15px; margin-bottom:20px;">
+        <button class="cta-main" onclick="next(19)">SÍ, LO NECESITO MUCHO</button>
+    </div>
+
+    <!-- P19: ALTURA SLIDER -->
+    <div class="screen" id="s19">
+        <h1>¿Cuál es tu altura?</h1>
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:25px;">
+            <button class="pill-btn selected" style="width:70px; height:35px; justify-content:center;" onclick="setHUnit('cm')">cm</button>
+            <button class="pill-btn" style="width:70px; height:35px; justify-content:center;" onclick="setHUnit('pol')">pol</button>
+        </div>
+        <h1 id="height-display" style="font-size:48px; color:var(--accent);">170cm</h1>
+        <div style="position:relative; width:100%; margin-top:30px;">
+            <div id="h-tri" class="height-triangle" style="left:42.8%;"></div>
+            <input type="range" id="height-slider" min="140" max="210" value="170" oninput="updateHeight(this.value)">
+        </div>
+        <button class="cta-main" onclick="next(20)">CONTINUAR PRUEBA GRATUITA</button>
+    </div>
+
+    <!-- P20: HÁBITOS ALIMENTARIOS (TODAS LAS OPCIONES) -->
+    <div class="screen" id="s20">
+        <h1>¿Cómo son tus hábitos alimentarios?</h1>
+        <p class="instruction">Puedes elegir varias:</p>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Amo comer dulces 🍫 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Cosas prácticas del día a día ✅ <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Tengo alimentación saludable 🥗 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Bebo refrescos 🥤 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Frutas y cosas saladas 🍓 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Consumo bebidas alcohólicas 🍷 <div class="custom-check"></div></div>
+        <button class="cta-main" onclick="next(21)">CONTINUAR</button>
+    </div>
+
+    <!-- P21: OBJECIÓN -->
+    <div class="screen" id="s21">
+        <h1>¿Crees que un protocolo de 10 min en casa te ayudaría?</h1>
+        <div class="opt-card" style="padding:30px; margin-bottom:20px;" onclick="next(22)">Sí, es exactamente lo que necesito 🤩</div>
+        <div class="opt-card" style="padding:30px;" onclick="next(22)">Vale la pena intentar 🤷‍♀️</div>
+    </div>
+
+    <!-- P22: BENEFICIOS (TODAS LAS OPCIONES) -->
+    <div class="screen" id="s22">
+        <h1>¿Qué beneficios quieres tener?</h1>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Sentirme más atractiva 💗 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Ropa que me quede bien 👗 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Mirarme al espejo y sentirme bien 🪞 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Recibir elogios 👏 <div class="custom-check"></div></div>
+        <div class="pill-btn" onclick="toggleMulti(this)" style="justify-content:space-between;">Tener energía 🏃 <div class="custom-check"></div></div>
+        <button class="cta-main" onclick="next(23)">CONTINUAR</button>
+    </div>
+
+    <!-- P23: DOLOR FUTURO -->
+    <div class="screen" id="s23">
+        <h1 style="color:var(--error);">Si nada cambia, ¿cómo será tu vida?</h1>
+        <div class="opt-card" style="padding:20px; margin-bottom:15px;" onclick="next(24)">Estaré más gorda y fea 🤰</div>
+        <div class="opt-card" style="padding:20px; margin-bottom:15px;" onclick="next(24)">Mi salud empeorará mucho 👩‍⚕️</div>
+        <div class="opt-card" style="padding:20px; margin-bottom:15px;" onclick="next(24)">Ninguna ropa me quedará 👕</div>
+        <div class="opt-card" style="padding:20px;" onclick="next(24)">Voy a sentirme muy mal 😞</div>
+    </div>
+
+    <!-- P24: COMPROMISO -->
+    <div class="screen" id="s24">
+        <h1>¿Dedicarías 10 min para cambiar?</h1>
+        <div class="opt-card" style="padding:25px; margin-bottom:20px;" onclick="startLoading(25)">SÍ, NECESITO CAMBIAR 😍</div>
+        <div class="opt-card" style="padding:25px;" onclick="startLoading(25)">ESTOY DISPUESTA A INTENTAR 🙏</div>
+    </div>
+
+    <!-- P25: CARGA FINAL (5 seg) -->
+    <div class="screen" id="s25" style="justify-content:center; text-align:center;">
+        <div style="display:flex; justify-content:space-between; width:100%; font-weight:900; margin-bottom:10px;"><span>Analizando...</span><span id="p25">29%</span></div>
+        <div style="width:100%; height:10px; background:#EEE; border-radius:10px; overflow:hidden; margin-bottom:25px;"><div id="b25" style="height:100%; width:29%; background:var(--accent); transition:width 5s linear;"></div></div>
+        <div class="opt-card" id="t25" style="opacity:0; transform:translateY(20px); transition:0.8s; text-align:left; padding:20px;">
+            <div style="display:flex; align-items:center; margin-bottom:10px;"><img src="https://i.pravatar.cc/100?u=lucia" style="width:45px; border-radius:50%; margin-right:12px; border:2px solid var(--accent);"><strong>Lucía Ribeiro ⭐★★★★</strong></div>
+            <p style="font-size:13px; font-style:italic;">"Eliminé 10.5kg en total, perdiendo 1kg cada semana..."</p>
+        </div>
+    </div>
+
+    <!-- P26: SALES PAGE PROFESIONAL -->
+    <div class="screen" id="s26" style="padding:0; background:var(--bg-neutral);">
+        <header class="sales-header">
+            <h2>MIRA ESTE VIDEO PARA LIBERAR TU PROTOCOLO</h2>
+            <p>🎯 ESPECÍFICO PARA TUS RESPUESTAS EN EL QUIZ</p>
+        </header>
+
+        <section class="video-box">
+            <div class="iphone-frame">
+                <div style="padding: 177.5% 0 0 0; position: relative; height: 100%;">
+                    <iframe height="100%" width="100%" src="https://embed.wave.video/cVaNiX4p6fNA5IuH" frameborder="0" allow="autoplay; fullscreen" style="position:absolute;top:0;left:0;"></iframe>
+                </div>
+            </div>
+            <a href="https://pay.hotmart.com/L105039194W" class="cta-main">PARTICIPAR DEL PILATES EN CASA</a>
+        </section>
+
+        <section class="sales-section">
+            <h2>RESULTADOS REALES</h2>
+            <img src="https://i.imgur.com/2oBs147.png" style="width:100%; border-radius:15px; margin-bottom:15px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">
+            <div class="opt-card" style="text-align:left; background:#F9F9F9; padding:20px; border-left:5px solid var(--accent);">
+                <strong>Letícia, Técnica en enfermagem</strong><br>
+                "Más holgura en la ropa en solo 8 días de rutina."
+            </div>
+        </section>
+
+        <section class="sales-section">
+            <div class="price-card">
+                <div style="background:var(--accent); color:white; display:inline-block; padding:5px 15px; border-radius:5px; font-size:12px; font-weight:800; margin-bottom:15px;">OFERTA VÁLIDA SÓLO HOY</div>
+                <p class="old-price">DE USD$50</p>
+                <h1 style="font-size:60px; margin:0; color:#000;">USD$9,90</h1>
+                <p style="font-size:12px; font-weight:800; margin-top:10px;">📍 EXCLUSIVO PARA PARTICIPANTES DEL QUIZ</p>
+            </div>
+            <a href="https://pay.hotmart.com/L105039194W" class="cta-main">PARTICIPAR AHORA - USD$9,90</a>
+        </section>
+
+        <section class="sales-section">
+            <h2 style="font-size:20px;">LO QUE VAS A RECIBIR:</h2>
+            <img src="https://i.imgur.com/4SydbyU.png" style="width:100%; border-radius:15px; margin-bottom:20px;">
+            <p style="color:var(--accent); font-weight:900;">🎯 ACTIVACIÓN GARANTIZADA - VALORADO EN USD 50</p>
+            <div style="text-align:left; font-size:15px; line-height:2.2; margin-top:20px;">
+                <div>✅ Libro Digital Protocolo Pilates Menopausia 10min</div>
+                <div>✅ Entrenadora Personal IA 24/7</div>
+                <div>✅ Plan Nutricional Anti-Inflamatorio</div>
+                <div>✅ Acceso sin aparatos necesarios</div>
+            </div>
+        </section>
+
+        <section class="sales-section" style="background:#FFF9F2;">
+            <h2 style="color:var(--accent);">¡YO QUIERO DARTE MÁS! 🎁</h2>
+            <div class="opt-card" style="text-align:left; align-items:flex-start; padding:20px; margin-bottom:15px;">
+                <strong>🎁 Guía de Compras Inteligente</strong><p style="font-size:13px;">Aprende a comprar los alimentos correctos y económicos.</p>
+            </div>
+            <div class="opt-card" style="text-align:left; align-items:flex-start; padding:20px; margin-bottom:15px;">
+                <strong>🎁 Control del Comer Emocional</strong><p style="font-size:13px;">Domina la ansiedad y el hambre por estrés.</p>
+            </div>
+            <a href="https://pay.hotmart.com/L105039194W" class="cta-main">QUIERO MIS REGALOS</a>
+        </section>
+
+        <section class="sales-section">
+            <div style="display:flex; align-items:center; gap:15px; text-align:left; margin-top:10px;">
+                <img src="https://i.imgur.com/MessPTk.png" style="width:75px; height:75px; border-radius:50%; border:3px solid var(--accent); object-fit:cover;">
+                <div><strong>Andreia Barbosa</strong><p style="font-size:13px; font-style:italic; line-height:1.4;">"Entrenamientos perfectos y caben en cualquier horario de mi rutina diaria."</p></div>
+            </div>
+        </section>
+
+        <section class="sales-section">
+            <img src="https://i.imgur.com/ZTApMLV.png" style="width:100%; max-width:400px; margin-bottom:20px;">
+            <p style="font-size:15px; margin-bottom:25px;">Prueba todo por 7 días. Si no te gusta, te devolvemos el 100% de tu dinero. Sin preguntas.</p>
+            <p style="font-weight:800; text-transform:uppercase;">ÚLTIMAS VACANTES CON DESCUENTO</p>
+            <h2 style="margin-top:10px;"><span class="strike-red">DE USD$50</span> → USD$9,90</h2>
+            <a href="https://pay.hotmart.com/L105039194W" class="cta-main">SÍ, QUIERO PARTICIPAR</a>
+        </section>
+
+        <footer style="padding:40px; background:#333; color:#777; font-size:11px; text-align:center;">
+            © 2024 Pilates en Casa - Todos los derechos reservados.
+        </footer>
+    </div>
+</div>
+
+<script>
+    let current = 1;
+    let unit = 'kg';
+    let hUnit = 'cm';
+
+    function next(id) {
+        const curEl = document.getElementById('s' + current);
+        const nextEl = document.getElementById('s' + id);
+        if(curEl && nextEl) {
+            curEl.classList.remove('active');
+            nextEl.classList.add('active');
+            current = id;
+            document.getElementById('progress-fill').style.width = (id / 26 * 100) + '%';
+            window.scrollTo(0,0);
+        }
+    }
+
+    function toggleMulti(el) { el.classList.toggle('selected'); }
+
+    function setUnit(u) {
+        unit = u;
+        document.querySelectorAll('#s14 .pill-btn').forEach(b => b.classList.remove('selected'));
+        event.target.classList.add('selected');
+        updateWeight(document.getElementById('weight-slider').value);
+    }
+
+    function updateWeight(v) {
+        document.getElementById('weight-display').innerText = v + unit;
+    }
+
+    function setHUnit(u) {
+        hUnit = u;
+        document.querySelectorAll('#s19 .pill-btn').forEach(b => b.classList.remove('selected'));
+        event.target.classList.add('selected');
+        updateHeight(document.getElementById('height-slider').value);
+    }
+
+    function updateHeight(v) {
+        document.getElementById('height-display').innerText = v + hUnit;
+        const percent = ((v - 140) / 70) * 100;
+        document.getElementById('h-tri').style.left = percent + '%';
+    }
+
+    function startLoading(id) {
+        next(id);
+        if(id === 11) simulate('p11', 'b11', 51, 100, 7000, 12);
+        if(id === 17) simulate('p17', 'b17', 0, 100, 5000, 18);
+        if(id === 25) {
+            setTimeout(() => { document.getElementById('t25').style.opacity = '1'; document.getElementById('t25').style.transform = 'translateY(0)'; }, 1000);
+            simulate('p25', 'b25', 29, 100, 5000, 26);
+        }
+    }
+
+    function simulate(textId, barId, start, end, duration, nextId) {
+        let val = start;
+        const bar = document.getElementById(barId);
+        const text = document.getElementById(textId);
+        setTimeout(() => bar.style.width = '100%', 100);
+        const int = setInterval(() => {
+            if(val < end) { val++; text.innerText = val + '%'; }
+            else { clearInterval(int); setTimeout(() => next(nextId), 800); }
+        }, duration / (end - start));
+    }
+</script>
+</body>
+</html>
